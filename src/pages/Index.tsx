@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
+const SUBSCRIBE_URL = "https://functions.poehali.dev/26375856-27a3-453e-aa48-2ea5defb345d";
+
 const PROFILES = [
   { name: "Алина", age: 24, emoji: "🌸", city: "Москва", tag: "Ищет приключений" },
   { name: "Дима", age: 27, emoji: "🔥", city: "СПб", tag: "Открыт к общению" },
@@ -56,6 +58,27 @@ export default function Index() {
   const [activeCard, setActiveCard] = useState(0);
   const [liked, setLiked] = useState<Record<number, boolean>>({});
   const [matchAnim, setMatchAnim] = useState(false);
+  const [email, setEmail] = useState("");
+  const [subState, setSubState] = useState<"idle" | "loading" | "ok" | "already" | "error">("idle");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubState("loading");
+    try {
+      const res = await fetch(SUBSCRIBE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.status === "ok") setSubState("ok");
+      else if (data.status === "already") setSubState("already");
+      else setSubState("error");
+    } catch {
+      setSubState("error");
+    }
+  };
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -351,6 +374,70 @@ export default function Index() {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* SUBSCRIBE */}
+      <section className="py-20 px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <span className="font-caveat text-xl text-pink-400">список ожидания</span>
+          <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">
+            Узнай первым о{" "}
+            <span style={{ color: "var(--neon-pink)" }} className="glow-pink">запуске</span>
+          </h2>
+          <p className="text-white/50 text-base mb-8 max-w-md mx-auto">
+            Оставь email — пришлём уведомление, когда бот откроется для всех, и дадим ранний доступ
+          </p>
+
+          {subState === "ok" ? (
+            <div className="card-glass rounded-3xl p-8 neon-border-pink inline-flex flex-col items-center gap-3">
+              <span className="text-5xl animate-heartbeat">💌</span>
+              <p className="font-semibold text-white text-lg">Отлично! Вы в списке</p>
+              <p className="text-white/50 text-sm">Пришлём письмо, как только бот запустится</p>
+            </div>
+          ) : subState === "already" ? (
+            <div className="card-glass rounded-3xl p-8 neon-border-purple inline-flex flex-col items-center gap-3">
+              <span className="text-5xl">✅</span>
+              <p className="font-semibold text-white text-lg">Вы уже в списке!</p>
+              <p className="text-white/50 text-sm">Ждите уведомления на почту</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ваш@email.com"
+                required
+                className="flex-1 px-5 py-4 rounded-2xl text-white placeholder-white/30 outline-none focus:ring-2 transition-all text-base"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  focusRing: "var(--neon-pink)",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(255,61,135,0.5)")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+              <button
+                type="submit"
+                disabled={subState === "loading"}
+                className="neon-btn text-white font-semibold px-6 py-4 rounded-2xl whitespace-nowrap disabled:opacity-60"
+              >
+                {subState === "loading" ? (
+                  <span className="flex items-center gap-2">
+                    <Icon name="Loader2" size={16} className="animate-spin" />
+                    Отправляю...
+                  </span>
+                ) : (
+                  "Подписаться 💌"
+                )}
+              </button>
+            </form>
+          )}
+
+          {subState === "error" && (
+            <p className="text-red-400 text-sm mt-3">Что-то пошло не так, попробуйте ещё раз</p>
+          )}
         </div>
       </section>
 

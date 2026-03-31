@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Subscribe with valid email",
+      "method": "POST",
+      "path": "/",
+      "body": {"email": "newuser_flirtbot@example.com"},
+      "expectedStatus": 200,
+      "expectedBody": {"status": "ok"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Subscribe duplicate email",
+      "method": "POST",
+      "path": "/",
+      "body": {"email": "newuser_flirtbot@example.com"},
+      "expectedStatus": 200,
+      "expectedBody": {"status": "already"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Subscribe with invalid email",
+      "method": "POST",
+      "path": "/",
+      "body": {"email": "notanemail"},
+      "expectedStatus": 400
+    }
+  ]
+}
